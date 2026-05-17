@@ -1,3 +1,13 @@
+---
+title: Face Recognition Attendance System
+emoji: 👤
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 👤 Face Recognition Attendance System (Enterprise Grade)
 
 An advanced, highly secure, and performance-optimized **Face Recognition Attendance System** built with **Flask**, **OpenCV**, and **Dlib** (`face_recognition`). This system is designed for enterprise environments, featuring real-time detection, GPS geofencing, automated reporting, and comprehensive admin/employee dashboards.
