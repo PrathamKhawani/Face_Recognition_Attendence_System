@@ -5,6 +5,9 @@ FROM python:3.10
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=7860
+# Limit compiler memory usage to prevent Out Of Memory (OOM) crashes on Hugging Face
+ENV CMAKE_BUILD_PARALLEL_LEVEL=1
+ENV MAKEFLAGS="-j1"
 
 # Install OpenCV and GUI rendering system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
