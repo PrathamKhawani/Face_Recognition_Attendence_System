@@ -10,7 +10,7 @@ pinned: false
 
 # 👤 Face Recognition Attendance System (Enterprise Grade)
 
-🚀 **[Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/PrathamKhawani/Face_Recognition_Attendence_System)**
+🚀 **[Live Web App Demo](https://prathamkhawani-face-recognition-attendence-system.hf.space)** | 👤 **[Hugging Face Space Hub](https://huggingface.co/spaces/PrathamKhawani/Face_Recognition_Attendence_System)**
 
 An advanced, highly secure, and performance-optimized **Face Recognition Attendance System** built with **Flask**, **OpenCV**, and **Dlib** (`face_recognition`). This system is designed for enterprise environments, featuring real-time detection, GPS geofencing, automated reporting, and comprehensive admin/employee dashboards.
 
