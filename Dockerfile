@@ -9,7 +9,7 @@ ENV PORT=7860
 # Install OpenCV and GUI rendering system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
