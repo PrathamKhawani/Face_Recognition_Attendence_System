@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}{{ user.name }} · Analytics · FaceID Enterprise{% endblock %}
+{% block page_title %}Employee Analytics{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Profile header -->
+<div class="card emp-header">
+  <div class="emp-avatar-lg">{{ user.name[0].upper() }}</div>
+  <div class="emp-header-info">
+    <div class="emp-name">{{ user.name }}</div>
+    <div class="emp-meta">{{ user.employee_id }} · {{ user.department or 'No Department' }} · {{ user.role or 'No Role' }}</div>
+    <div class="emp-meta">{{ user.email or '' }}{% if user.phone %} · {{ user.phone }}{% endif %}</div>
+    <div class="emp-shifts">Shift: {{ user.shift_start }} – {{ user.shift_end }}</div>
+  </div>
+  <div class="emp-header-actions">
+    <a href="{{ url_for('users.users') }}" class="btn btn-ghost btn-xs">← Back</a>
+  </div>
+</div>
+
+<!-- KPI strip -->
+<div class="kpi-strip" id="emp-kpis">
+  <div class="kpi-card"><div class="kpi-icon kpi-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="kpi-body"><div class="kpi-val" id="ek-rate">—</div><div class="kpi-label">Month Rate</div></div></div>
+  <div class="kpi-card"><div class="kpi-icon kpi-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div class="kpi-body"><div class="kpi-val" id="ek-avg">—</div><div class="kpi-label">Avg Check-In</div></div></div>
+  <div class="kpi-card"><div class="kpi-icon kpi-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+    <div class="kpi-body"><div class="kpi-val" id="ek-hours">—</div><div class="kpi-label">Total Hours</div></div></div>
+  <div class="kpi-card"><div class="kpi-icon kpi-yellow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+    <div class="kpi-body"><div class="kpi-val" id="ek-streak">—</div><div class="kpi-label">Day Streak</div></div></div>
+</div>
+
+<!-- Row: stat cards + monthly chart -->
+<div class="emp-mid">
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Attendance Breakdown</span></div>
+    <div class="stat-list" id="stat-list">
+      <div class="stat-row"><span>Present Days</span><span class="stat-val" id="s-present">—</span></div>
+      <div class="stat-row"><span>Late Arrivals</span><span class="stat-val pill-yellow" id="s-late">—</span></div>
+      <div class="stat-row"><span>Early Departures</span><span class="stat-val pill-orange" id="s-early">—</span></div>
+      <div class="stat-row"><span>Avg Hours/Day</span><span class="stat-val" id="s-avghrs">—</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><span class="card-title">6-Month Attendance Trend</span></div>
+    <div class="chart-wrap" style="height:160px"><canvas id="trend-chart"></canvas></div>
+  </div>
+</div>
+
+<!-- 30-day heatmap -->
+<div class="card">
+  <div class="card-hd"><span class="card-title">Last 30 Days</span>
+    <div class="heatmap-legend">
+      <span class="hm-dot hm-present"></span>Present
+      <span class="hm-dot hm-late"></span>Late
+      <span class="hm-dot hm-absent"></span>Absent
+      <span class="hm-dot hm-weekend"></span>Weekend
+    </div>
+  </div>
+  <div class="heatmap-grid" id="heatmap"></div>
+</div>
+
+<!-- Recent logs -->
+<div class="card">
+  <div class="card-hd"><span class="card-title">Recent Records</span></div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Hours</th><th>Status</th></tr></thead>
+      <tbody id="recent-logs"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+const UID = {{ user.id }};
+let trendChart = null;
+
+async function loadAnalytics() {
+  const res  = await fetch(`/api/users/${UID}/analytics`);
+  const data = await res.json();
+  const s    = data.summary;
+
+  // KPIs
+  document.getElementById('ek-rate').textContent   = s.month_rate + '%';
+  document.getElementById('ek-avg').textContent    = s.avg_checkin;
+  document.getElementById('ek-hours').textContent  = s.total_hours + 'h';
+  document.getElementById('ek-streak').textContent = s.streak + ' days';
+
+  // Stat list
+  document.getElementById('s-present').textContent = s.present_days;
+  document.getElementById('s-late').textContent    = s.late_days;
+  document.getElementById('s-early').textContent   = s.early_exits;
+  document.getElementById('s-avghrs').textContent  = s.avg_hours + 'h';
+
+  // 6-month trend chart
+  const labels = data.monthly.map(m => m.label);
+  const counts = data.monthly.map(m => m.count);
+  if (trendChart) { trendChart.destroy(); }
+  trendChart = buildLineChart('trend-chart', labels, counts, 'Days Present');
+
+  // 30-day heatmap
+  const hm = document.getElementById('heatmap');
+  hm.innerHTML = data.heatmap.map(d => {
+    const cls = d.status === 'Present' ? 'hm-present'
+              : d.status === 'Late'    ? 'hm-late'
+              : d.status === 'Weekend' ? 'hm-weekend'
+              : 'hm-absent';
+    const tip = `${d.date}${d.hours ? ' · ' + d.hours + 'h' : ''}`;
+    return `<div class="hm-cell ${cls}" title="${tip}"><span class="hm-day">${new Date(d.date+'T00:00:00').getDate()}</span></div>`;
+  }).join('');
+
+  // Recent logs table
+  const tbody = document.getElementById('recent-logs');
+  tbody.innerHTML = data.recent.map(l => `
+    <tr class="row-in">
+      <td class="mono">${l.date}</td>
+      <td class="mono">${l.check_in || '—'}</td>
+      <td class="mono">${l.check_out || '—'}</td>
+      <td class="mono">${l.hours_worked != null ? l.hours_worked + 'h' : '—'}</td>
+      <td><span class="status-pill ${pillClass(l.status)}">${l.status}</span></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="tbl-empty">No records yet.</td></tr>';
+}
+
+function pillClass(s) {
+  return s==='Present'?'pill-green':s==='Late'?'pill-yellow':s==='Early Departure'?'pill-orange':'pill-red';
+}
+
+loadAnalytics();
+</script>
+{% endblock %}

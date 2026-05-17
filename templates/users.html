@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Employees · FaceID Enterprise{% endblock %}
+{% block page_title %}Employee Management{% endblock %}
+
+{% block content %}
+<div class="ctrl-bar">
+  <div class="ctrl-left">
+    <input type="text"  id="u-search" class="inp-text" placeholder="Search name…" oninput="debounce()">
+    <select id="u-dept" class="inp-select" onchange="loadUsers()">
+      <option value="">All Departments</option>
+    </select>
+  </div>
+  <a href="{{ url_for('users.add_user') }}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Add Employee
+  </a>
+</div>
+
+<!-- Summary strip -->
+<div class="user-summary" id="user-summary"></div>
+
+<!-- User table -->
+<div class="card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>ID</th>
+          <th>Department</th>
+          <th>Role</th>
+          <th>Today Status</th>
+          <th>Check-In</th>
+          <th>Hours</th>
+          <th>Joined</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="user-body">
+        <tr><td colspan="9" class="tbl-empty">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tbl-footer" id="tbl-footer"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let page = 1, debTimer = null;
+
+function debounce() {
+  clearTimeout(debTimer);
+  debTimer = setTimeout(() => { page = 1; loadUsers(); }, 300);
+}
+
+async function loadUsers() {
+  const q    = document.getElementById('u-search').value;
+  const dept = document.getElementById('u-dept').value;
+  const res  = await fetch(`/api/users?q=${encodeURIComponent(q)}&dept=${encodeURIComponent(dept)}&page=${page}&per=25`);
+  const data = await res.json();
+
+  // Dept filter
+  const sel = document.getElementById('u-dept');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Departments</option>' +
+    data.departments.map(d=>`<option value="${d}" ${d===cur?'selected':''}>${d}</option>`).join('');
+
+  // Summary
+  document.getElementById('user-summary').innerHTML = `
+    <span class="sum-badge">Total: <strong>${data.total}</strong></span>`;
+
+  const tbody = document.getElementById('user-body');
+  if (!data.users.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="tbl-empty">No employees found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.users.map(u => `
+    <tr class="row-in">
+      <td><div class="name-cell">
+        <div class="avatar-sm ${u.has_image ? 'av-img' : ''}"
+             style="${u.has_image ? '' : ''}">
+          ${u.name.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div class="u-name">${u.name}</div>
+          <div class="u-email">${u.email || '—'}</div>
+        </div>
+      </div></td>
+      <td class="mono">${u.employee_id}</td>
+      <td>${u.department || '—'}</td>
+      <td>${u.role || '—'}</td>
+      <td><span class="status-pill ${pillClass(u.today_status)}">${u.today_status}</span></td>
+      <td class="mono">${u.today_checkin || '—'}</td>
+      <td class="mono">${u.today_hours != null ? u.today_hours + 'h' : '—'}</td>
+      <td class="mono">${u.join_date || '—'}</td>
+      <td style="text-align:right">
+        <a href="/users/${u.id}/detail" class="btn btn-xs btn-ghost">Analytics</a>
+        <button class="btn btn-xs btn-danger-ghost" onclick="confirmDelete(${u.id},'${escHtml(u.name)}')">Remove</button>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('tbl-footer').textContent =
+    `Showing ${data.users.length} of ${data.total} employees`;
+}
+
+function pillClass(s) {
+  if (s === 'Present')        return 'pill-green';
+  if (s === 'Late')           return 'pill-yellow';
+  if (s === 'Early Departure')return 'pill-orange';
+  return 'pill-red';
+}
+
+function escHtml(s) { return s.replace(/'/g, "\\'"); }
+
+function confirmDelete(id, name) {
+  window._deleteId = id;
+  document.getElementById('del-modal').style.display = 'flex';
+  document.getElementById('modal-confirm-btn').onclick = async () => {
+    await fetch(`/api/users/${id}`, {method:'DELETE', headers: {'X-CSRFToken': getCsrfToken()}});
+    closeModal();
+    showToast(`${name} removed`, 'warning');
+    loadUsers();
+  };
+}
+
+async function viewHistory(id, name) {
+  const res  = await fetch(`/api/users/${id}/attendance`);
+  const data = await res.json();
+  const logs = data.logs;
+  const html = logs.length ? logs.slice(0,10).map(l=>
+    `<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.75rem">
+      <span>${l.date}</span>
+      <span class="mono">${l.check_in||'—'} → ${l.check_out||'—'}</span>
+      <span class="status-pill ${pillClass(l.status)}">${l.status}</span>
+    </div>`).join('')
+    : '<div style="color:var(--t2);font-size:.75rem">No attendance records.</div>';
+  showToast(`<strong>${name}</strong> — last 10 records<br>${html}`, 'info', 8000);
+}
+
+loadUsers();
+</script>
+{% endblock %}

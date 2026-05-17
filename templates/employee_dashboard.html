@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}My Attendance · FaceID{% endblock %}
+{% block page_title %}My Personal Dashboard{% endblock %}
+
+{% block content %}
+<div class="kpi-strip">
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+    </div>
+    <div class="kpi-body">
+      <div class="kpi-val">{{ user.logs|length }}</div>
+      <div class="kpi-label">Days Present</div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="kpi-body">
+      <div class="kpi-val">
+        {% set total_hours = namespace(val=0) %}
+        {% for log in user.logs %}{% if log.hours_worked %}{% set total_hours.val = total_hours.val + log.hours_worked %}{% endif %}{% endfor %}
+        {{ total_hours.val|round(1) }}h
+      </div>
+      <div class="kpi-label">Total Hours</div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div class="kpi-body">
+      <div class="kpi-val">
+        {% set late_count = namespace(val=0) %}
+        {% for log in user.logs %}{% if log.status == 'Late' %}{% set late_count.val = late_count.val + 1 %}{% endif %}{% endfor %}
+        {{ late_count.val }}
+      </div>
+      <div class="kpi-label">Late Entries</div>
+    </div>
+  </div>
+</div>
+
+<div class="dash-mid" style="margin-top: 20px;">
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">My Recent Activity</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Hours</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in user.logs|sort(attribute='date', reverse=True)|batch(10)|first %}
+          <tr>
+            <td class="mono">{{ log.date }}</td>
+            <td class="mono">{{ log.check_in or '—' }}</td>
+            <td class="mono">{{ log.check_out or '—' }}</td>
+            <td class="mono">{{ log.hours_worked or '—' }}h</td>
+            <td><span class="status-pill {% if log.status == 'Present' %}pill-green{% elif log.status == 'Late' %}pill-yellow{% else %}pill-red{% endif %}">{{ log.status }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="tbl-empty">No activity records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if session.get('needs_password') %}
+<div class="modal-overlay" style="display:flex">
+  <div class="modal-box">
+    <h3>🔐 Set Your Password</h3>
+    <p>This is your first login. Please set a secure password for your personal dashboard.</p>
+    <form action="{{ url_for('users.set_password') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group" style="margin-bottom:15px">
+        <label>New Password</label>
+        <input type="password" name="password" class="inp-text" required minlength="6">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

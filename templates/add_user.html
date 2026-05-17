@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}Add Employee · FaceID Enterprise{% endblock %}
+{% block page_title %}Add Employee{% endblock %}
+
+{% block content %}
+<div class="add-user-wrap">
+  <form id="add-form" enctype="multipart/form-data">
+    <!-- Left: Photo upload -->
+    <div class="card photo-card">
+      <div class="card-hd">
+        <span class="card-title">Face Photo</span>
+        <div class="tab-group" style="padding:2px">
+          <button type="button" id="tab-upload" class="tab-btn active" onclick="setPhotoMode('upload')">Upload</button>
+          <button type="button" id="tab-webcam" class="tab-btn" onclick="setPhotoMode('webcam')">Webcam</button>
+        </div>
+      </div>
+      
+      <!-- Upload Mode -->
+      <div id="mode-upload">
+        <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-input').click()">
+          <div class="photo-preview" id="photo-preview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <p>Click or drag to upload photo</p>
+            <span>JPG, PNG up to 16 MB</span>
+          </div>
+          <img id="preview-img" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:12px">
+        </div>
+        <input type="file" id="photo-input" name="photo" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+      </div>
+
+      <!-- Webcam Mode -->
+      <div id="mode-webcam" style="display:none">
+        <div class="photo-drop" style="position:relative; border-style:solid; padding:0; background:#000">
+          <video id="webcam-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; border-radius:8px;"></video>
+          <canvas id="webcam-canvas" width="640" height="480" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:8px;"></canvas>
+          <button type="button" id="snap-btn" class="btn btn-primary" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%)" onclick="snapPhoto()">📷 Snap Photo</button>
+          <button type="button" id="retake-btn" class="btn btn-ghost" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:none; background:rgba(0,0,0,0.6)" onclick="retakePhoto()">↺ Retake</button>
+        </div>
+        <input type="hidden" id="webcam-data" name="webcam_data">
+      </div>
+
+      <p class="photo-hint">Use a clear, front-facing photo with good lighting. This will be used for all future face recognition.</p>
+    </div>
+
+    <!-- Right: Profile fields -->
+    <div class="form-section">
+      <div class="card form-card">
+        <div class="card-hd"><span class="card-title">Personal Information</span></div>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" name="name" class="inp-text" placeholder="e.g. Pratham Sharma" required>
+          </div>
+          <div class="form-group">
+            <label>Employee ID</label>
+            <input type="text" name="employee_id" class="inp-text" placeholder="Auto-generated if blank">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" name="department" class="inp-text" placeholder="e.g. Engineering">
+          </div>
+          <div class="form-group">
+            <label>Role / Position</label>
+            <input type="text" name="role" class="inp-text" placeholder="e.g. Senior Developer">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" name="email" class="inp-text" placeholder="name@company.com">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" class="inp-text" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label>Date of Joining</label>
+            <input type="date" name="join_date" class="inp-date" id="join-date">
+          </div>
+        </div>
+      </div>
+
+      <div class="card form-card" style="margin-top:1rem">
+        <div class="card-hd"><span class="card-title">Shift Schedule</span></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Shift Start</label>
+            <input type="time" name="shift_start" class="inp-date" value="09:00">
+          </div>
+          <div class="form-group">
+            <label>Shift End</label>
+            <input type="time" name="shift_end" class="inp-date" value="18:00">
+          </div>
+        </div>
+        <p class="photo-hint" style="margin-top:.5rem">Shift times are used to determine Late / Early Departure status automatically.</p>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('users.users') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          Enroll Employee
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('join-date').value = new Date().toISOString().split('T')[0];
+
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-img').style.display = 'block';
+    document.getElementById('photo-preview').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag-and-drop
+const drop = document.getElementById('photo-drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+drop.addEventListener('dragleave', ()=> drop.classList.remove('drag-over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    document.getElementById('photo-input').files = e.dataTransfer.files;
+    previewPhoto(document.getElementById('photo-input'));
+  }
+});
+
+let stream = null;
+
+async function setPhotoMode(mode) {
+  document.getElementById('tab-upload').classList.toggle('active', mode === 'upload');
+  document.getElementById('tab-webcam').classList.toggle('active', mode === 'webcam');
+  document.getElementById('mode-upload').style.display = mode === 'upload' ? 'block' : 'none';
+  document.getElementById('mode-webcam').style.display = mode === 'webcam' ? 'block' : 'none';
+  
+  if (mode === 'webcam') {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      document.getElementById('webcam-video').srcObject = stream;
+    } catch (err) {
+      showToast('Could not access webcam', 'error');
+      setPhotoMode('upload');
+    }
+  } else {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  }
+}
+
+function snapPhoto() {
+  const video = document.getElementById('webcam-video');
+  const canvas = document.getElementById('webcam-canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  
+  document.getElementById('webcam-data').value = canvas.toDataURL('image/jpeg');
+  video.style.display = 'none';
+  canvas.style.display = 'block';
+  document.getElementById('snap-btn').style.display = 'none';
+  document.getElementById('retake-btn').style.display = 'inline-flex';
+  
+  // Stop stream to freeze frame
+  if (stream) stream.getTracks().forEach(t => t.stop());
+}
+
+async function retakePhoto() {
+  document.getElementById('webcam-data').value = '';
+  document.getElementById('webcam-video').style.display = 'block';
+  document.getElementById('webcam-canvas').style.display = 'none';
+  document.getElementById('snap-btn').style.display = 'inline-flex';
+  document.getElementById('retake-btn').style.display = 'none';
+  
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+  document.getElementById('webcam-video').srcObject = stream;
+}
+
+document.getElementById('add-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Enrolling…';
+
+  const fd = new FormData(e.target);
+  try {
+    const res  = await fetch('/users/add', {method:'POST', body: fd, headers: {'X-CSRFToken': getCsrfToken()}});
+    const data = await res.json();
+    if (res.ok) {
+      showToast(`Employee enrolled — ID: ${data.employee_id}`, 'success');
+      setTimeout(()=> window.location.href = '/users', 1500);
+    } else {
+      showToast(data.error || 'Failed to enroll', 'error');
+      btn.disabled = false; btn.textContent = 'Enroll Employee';
+    }
+  } catch(err) {
+    showToast('Network error', 'error');
+    btn.disabled = false; btn.textContent = 'Enroll Employee';
+  }
+});
+</script>
+{% endblock %}

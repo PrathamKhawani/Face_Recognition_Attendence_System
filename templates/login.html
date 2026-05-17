@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In · FaceID Enterprise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--surface:#111318;--border:rgba(255,255,255,0.08);
+      --primary:#4f46e5;--accent:#10b981;--t1:#f1f5f9;--t2:#64748b;--danger:#ef4444}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:13px;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;
+     min-height:100vh;display:flex;align-items:center;justify-content:center;
+     position:relative;overflow:hidden}
+
+/* Blobs */
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.12;pointer-events:none}
+.b1{width:500px;height:500px;background:var(--primary);top:-150px;right:-100px}
+.b2{width:400px;height:400px;background:var(--accent);bottom:-100px;left:-100px}
+
+.login-card{background:var(--surface);border:1px solid var(--border);
+            border-radius:14px;padding:36px 32px;width:100%;max-width:380px;
+            position:relative;z-index:1}
+
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.login-logo-icon{width:32px;height:32px;color:var(--primary)}
+.login-logo-icon svg{width:100%;height:100%}
+.login-brand{display:flex;flex-direction:column}
+.login-brand-name{font-size:1rem;font-weight:700;letter-spacing:-.3px}
+.login-brand-sub{font-size:.68rem;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+
+h2{font-size:.95rem;font-weight:600;margin-bottom:4px}
+.login-sub{font-size:.78rem;color:var(--t2);margin-bottom:24px}
+
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+label{font-size:.75rem;font-weight:500;color:var(--t2)}
+input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;
+      color:var(--t1);padding:8px 12px;font-size:.82rem;font-family:inherit;outline:none;
+      transition:border-color .15s}
+input:focus{border-color:var(--primary)}
+
+.error-box{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);
+           border-radius:7px;padding:8px 12px;font-size:.75rem;color:var(--danger);
+           margin-bottom:14px}
+
+.btn-login{width:100%;background:var(--primary);color:#fff;border:none;border-radius:7px;
+           padding:9px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;
+           transition:background .15s;margin-top:4px}
+.btn-login:hover{background:#3730a3}
+
+.login-footer{margin-top:20px;font-size:.72rem;color:var(--t2);text-align:center}
+.login-footer code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;
+                   font-family:monospace;font-size:.72rem}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<div class="login-card">
+  <div class="login-logo">
+    <div class="login-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        <circle cx="19" cy="8" r="2" fill="#10b981" stroke="none"/>
+      </svg>
+    </div>
+    <div class="login-brand">
+      <span class="login-brand-name">FaceID</span>
+      <span class="login-brand-sub">Enterprise</span>
+    </div>
+  </div>
+
+  <h2>Admin Sign In</h2>
+  <p class="login-sub">Secure access to the attendance dashboard</p>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="admin"
+             autocomplete="username" autofocus required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="••••••••"
+             autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn-login">Sign In →</button>
+  </form>
+
+  <div class="login-footer">
+    Default credentials: <code>admin</code> / <code>FaceID@2026</code><br>
+    Change in <code>config.py</code>
+  </div>
+</div>
+</body>
+</html>

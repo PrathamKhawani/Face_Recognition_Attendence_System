@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Records · FaceID Enterprise{% endblock %}
+{% block page_title %}Attendance Records{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Controls bar -->
+<div class="ctrl-bar">
+  <div class="tab-group">
+    <button class="tab-btn active" data-view="daily"   onclick="setView('daily',this)">Daily</button>
+    <button class="tab-btn"        data-view="monthly" onclick="setView('monthly',this)">Monthly</button>
+    <button class="tab-btn"        data-view="yearly"  onclick="setView('yearly',this)">Yearly</button>
+  </div>
+  <div class="ctrl-right">
+    <input type="date" id="date-picker" class="inp-date" value="">
+    <select id="dept-filter" class="inp-select">
+      <option value="">All Departments</option>
+    </select>
+    <input type="text" id="search-input" class="inp-text" placeholder="Search name…" oninput="debounceLoad()">
+    <button class="btn btn-ghost" onclick="exportExcel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="8" y1="13" x2="16" y2="13"/>
+        <line x1="8" y1="17" x2="16" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      Export Excel
+    </button>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="card chart-card" style="margin-bottom:1rem">
+  <div class="card-hd">
+    <span class="card-title" id="chart-label">Attendance · Today</span>
+    <span class="badge" id="rec-count">0 records</span>
+  </div>
+  <div class="chart-wrap" style="height:200px">
+    <canvas id="att-chart"></canvas>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>ID</th>
+          <th>Department</th>
+          <th>Date</th>
+          <th>Check-In</th>
+          <th>Check-Out</th>
+          <th>Hours</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="att-body">
+        <tr><td colspan="8" class="tbl-empty">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+let currentView = 'daily';
+let attChart    = null;
+let debTimer    = null;
+
+// Set today as default
+document.getElementById('date-picker').value = new Date().toISOString().split('T')[0];
+
+function setView(v, el) {
+  currentView = v;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadData();
+}
+
+function debounceLoad() {
+  clearTimeout(debTimer);
+  debTimer = setTimeout(loadData, 300);
+}
+
+async function loadData() {
+  const date   = document.getElementById('date-picker').value;
+  const dept   = document.getElementById('dept-filter').value;
+  const search = document.getElementById('search-input').value;
+  const url    = `/api/attendance?view=${currentView}&date=${date}&dept=${encodeURIComponent(dept)}&q=${encodeURIComponent(search)}`;
+
+  const res  = await fetch(url);
+  const data = await res.json();
+
+  // Populate dept filter
+  const sel = document.getElementById('dept-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Departments</option>' +
+    data.departments.map(d => `<option value="${d}" ${d===cur?'selected':''}>${d}</option>`).join('');
+
+  document.getElementById('rec-count').textContent = data.records.length + ' records';
+
+  // Chart label
+  const labels = {'daily':'Today','monthly':'This Month','yearly':'This Year'};
+  document.getElementById('chart-label').textContent =
+    `Attendance · ${labels[currentView]}`;
+
+  // Chart — bar for daily, line for monthly/yearly
+  if (attChart) { attChart.destroy(); attChart = null; }
+  if (currentView === 'daily') {
+    attChart = buildBarChart('att-chart', data.chart.labels, data.chart.present, 'Check-Ins');
+  } else {
+    attChart = buildLineChart('att-chart', data.chart.labels, data.chart.present, 'Attendance');
+  }
+
+  // Table
+  const tbody = document.getElementById('att-body');
+  if (!data.records.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="tbl-empty">No records found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.records.map(r => `
+    <tr class="row-in">
+      <td><div class="name-cell">
+        <div class="avatar-sm">${r.name.charAt(0)}</div>
+        <span>${r.name}</span>
+      </div></td>
+      <td class="mono">${r.employee_id}</td>
+      <td>${r.department || '—'}</td>
+      <td class="mono">${r.date}</td>
+      <td class="mono">${r.check_in || '—'}</td>
+      <td class="mono">${r.check_out || '—'}</td>
+      <td class="mono">${r.hours_worked != null ? r.hours_worked + 'h' : '—'}</td>
+      <td><span class="status-pill ${pillClass(r.status)}">${r.status}</span></td>
+    </tr>`).join('');
+}
+
+function pillClass(s) {
+  if (s === 'Present')        return 'pill-green';
+  if (s === 'Late')           return 'pill-yellow';
+  if (s === 'Early Departure')return 'pill-orange';
+  return 'pill-red';
+}
+
+function exportExcel() {
+  const date = document.getElementById('date-picker').value;
+  window.location.href = `/api/attendance/export?view=${currentView}&date=${date}`;
+}
+
+loadData();
+document.getElementById('date-picker').addEventListener('change', loadData);
+document.getElementById('dept-filter').addEventListener('change', loadData);
+</script>
+{% endblock %}

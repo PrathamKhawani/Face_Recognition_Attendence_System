@@ -1,0 +1,35 @@
+# Python/Flask gitignore template
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+venv.bak/
+ENV.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Flask instance folder (contains local database and local configuration)
+instance/
+
+# Local environment variables
+.env
+
+# Editor/IDE configs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Ignore all employee photos in ImagesAttendance, but keep the folder structure
+ImagesAttendance/*
+!ImagesAttendance/.gitkeep
+

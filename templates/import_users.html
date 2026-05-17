@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Bulk Import · FaceID Enterprise{% endblock %}
+{% block page_title %}Bulk Import Employees{% endblock %}
+
+{% block content %}
+<div class="import-wrap">
+
+  <!-- Instructions -->
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-hd"><span class="card-title">How to Import</span></div>
+    <div class="import-steps">
+      <div class="import-step">
+        <div class="step-num">1</div>
+        <div><strong>Prepare your CSV or Excel file</strong><br>
+          Must have a <code>Name</code> column. Other columns are optional.</div>
+      </div>
+      <div class="import-step">
+        <div class="step-num">2</div>
+        <div><strong>Supported column names</strong><br>
+          <code>Name</code>, <code>Employee_ID</code>, <code>Department</code>,
+          <code>Role</code>, <code>Email</code>, <code>Phone</code>,
+          <code>Shift_Start</code>, <code>Shift_End</code>, <code>Join_Date</code>
+        </div>
+      </div>
+      <div class="import-step">
+        <div class="step-num">3</div>
+        <div><strong>No photo needed</strong><br>
+          You can add face photos later per employee from the Employees page.</div>
+      </div>
+    </div>
+
+    <!-- Sample download -->
+    <div style="margin-top:14px">
+      <a href="#" onclick="downloadSample()" class="btn btn-ghost btn-xs">
+        ↓ Download Sample CSV
+      </a>
+    </div>
+  </div>
+
+  <!-- Upload form -->
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Upload File</span></div>
+    <div class="import-drop" id="import-drop" onclick="document.getElementById('csv-input').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="color:var(--t2)">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p id="drop-label">Click or drag CSV / Excel file here</p>
+      <span id="drop-file" style="color:var(--accent);font-size:.75rem"></span>
+    </div>
+    <input type="file" id="csv-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="fileSelected(this)">
+
+    <div class="form-actions" style="margin-top:14px">
+      <a href="{{ url_for('users.users') }}" class="btn btn-ghost">Cancel</a>
+      <button class="btn btn-primary" id="import-btn" onclick="doImport()" disabled>
+        Import Employees
+      </button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="result-card" style="display:none">
+    <div class="card-hd"><span class="card-title">Import Results</span></div>
+    <div id="result-body"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedFile = null;
+
+function fileSelected(input) {
+  selectedFile = input.files[0];
+  if (!selectedFile) return;
+  document.getElementById('drop-label').textContent = 'File ready:';
+  document.getElementById('drop-file').textContent  = selectedFile.name;
+  document.getElementById('import-btn').disabled    = false;
+}
+
+// Drag-and-drop
+const drop = document.getElementById('import-drop');
+drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('drag-over'); });
+drop.addEventListener('dragleave', ()  => drop.classList.remove('drag-over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('drag-over');
+  document.getElementById('csv-input').files = e.dataTransfer.files;
+  fileSelected(document.getElementById('csv-input'));
+});
+
+async function doImport() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('import-btn');
+  btn.disabled = true; btn.textContent = 'Importing…';
+
+  const fd = new FormData();
+  fd.append('csv_file', selectedFile);
+
+  try {
+    const res  = await fetch('/users/import', { method: 'POST', body: fd, headers: {'X-CSRFToken': getCsrfToken()} });
+    const data = await res.json();
+
+    const card = document.getElementById('result-card');
+    const body = document.getElementById('result-body');
+    card.style.display = '';
+
+    if (!res.ok) {
+      body.innerHTML = `<div class="result-row result-error">❌ ${data.error}</div>`;
+    } else {
+      body.innerHTML = `
+        <div class="result-stats">
+          <div class="result-stat stat-green"><div class="rs-val">${data.imported}</div><div class="rs-lbl">Imported</div></div>
+          <div class="result-stat stat-yellow"><div class="rs-val">${data.skipped}</div><div class="rs-lbl">Skipped</div></div>
+        </div>
+        ${data.errors.length ? `<div style="margin-top:10px">${data.errors.map(e=>`<div class="result-row result-warn">⚠ ${e}</div>`).join('')}</div>` : ''}
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <a href="/users" class="btn btn-primary">View Employees</a>
+          <button class="btn btn-ghost" onclick="document.getElementById('result-card').style.display='none'">Import More</button>
+        </div>`;
+      showToast(`${data.imported} employees imported successfully`, 'success');
+    }
+  } catch (e) {
+    showToast('Network error during import', 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Import Employees';
+}
+
+function downloadSample() {
+  const csv = `Name,Employee_ID,Department,Role,Email,Phone,Shift_Start,Shift_End,Join_Date
+John Smith,ENG-001,Engineering,Developer,john@company.com,9876543210,09:00,18:00,2024-01-15
+Priya Sharma,HR-001,Human Resources,HR Manager,priya@company.com,9876543211,09:30,18:30,2023-06-01
+Rahul Verma,,Sales,Sales Executive,rahul@company.com,,09:00,18:00,`;
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'employee_import_sample.csv';
+  a.click();
+}
+</script>
+{% endblock %}
