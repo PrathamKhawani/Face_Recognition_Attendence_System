@@ -127,6 +127,12 @@ def video_feed():
     mode = request.args.get('mode', 'entry')
     app  = current_app._get_current_object()
     
+    import os
+    # Hugging Face provides a dummy /dev/video0 that returns black frames instead of failing.
+    # To force the client-side JavaScript webcam fallback, we intentionally return 404 in the cloud.
+    if os.environ.get('PORT') is not None:
+        return "Backend camera disabled in cloud to force client fallback", 404
+
     cap, _ = _get_cap_and_lock(mode)
     if cap is None:
         return "Camera not found", 404

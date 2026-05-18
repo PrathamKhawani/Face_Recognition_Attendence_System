@@ -19,7 +19,7 @@ ENCODING_JITTERS     = 10     # higher = more accurate but slower loading
 DETECTION_MODEL      = 'hog'  # 'hog' (fast CPU) or 'cnn' (slow CPU, fast GPU)
 
 # GPS Geofencing (Mobile Protection)
-GEOFENCING_ENABLED   = True
+GEOFENCING_ENABLED   = False
 OFFICE_LAT           = 19.0760   # Example: Mumbai
 OFFICE_LON           = 72.8777
 GEOFENCE_RADIUS      = 200      # Meters
