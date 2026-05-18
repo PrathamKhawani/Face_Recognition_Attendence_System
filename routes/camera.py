@@ -32,11 +32,17 @@ def _get_cap_and_lock(mode: str):
         if idx not in _cams or not _cams[idx].isOpened():
             # Use CAP_DSHOW for faster/more reliable access on Windows
             cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-            cap.set(cv2.CAP_PROP_FPS, 30)
-            _cams[idx] = cap
-            _read_locks[idx] = threading.Lock()
+            if not cap.isOpened():
+                cap = cv2.VideoCapture(idx) # fallback
+            
+            if cap.isOpened():
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                cap.set(cv2.CAP_PROP_FPS, 30)
+                _cams[idx] = cap
+                _read_locks[idx] = threading.Lock()
+            else:
+                return None, None
         return _cams[idx], _read_locks[idx]
 
 
@@ -91,8 +97,7 @@ def _mark(uid: int, mode: str, app):
 
 
 # ── MJPEG generator ───────────────────────────────────────────────────
-def _gen(mode: str, app):
-    cap, read_lock = _get_cap_and_lock(mode)
+def _gen(mode: str, app, cap, read_lock):
     while True:
         with read_lock:
             ok, frame = cap.read()
@@ -121,7 +126,12 @@ def _gen(mode: str, app):
 def video_feed():
     mode = request.args.get('mode', 'entry')
     app  = current_app._get_current_object()
-    return Response(_gen(mode, app),
+    
+    cap, _ = _get_cap_and_lock(mode)
+    if cap is None:
+        return "Camera not found", 404
+        
+    return Response(_gen(mode, app, cap, _),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
