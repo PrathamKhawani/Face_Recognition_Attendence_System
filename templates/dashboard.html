@@ -72,7 +72,7 @@
       </div>
     </div>
     <div class="cam-wrap">
-      <img id="entry-feed" src="{{ url_for('camera.video_feed') }}?mode=entry" alt="Entry Feed" class="cam-feed" onerror="if(typeof setupClientCameraFallback === 'function') setupClientCameraFallback('entry-feed', 'entry')">
+      <img id="entry-feed" alt="Entry Feed" class="cam-feed" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
       <div class="scan-line"></div>
       <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
       <div class="cam-corner bl"></div><div class="cam-corner br"></div>
@@ -99,7 +99,7 @@
       </div>
     </div>
     <div class="cam-wrap">
-      <img id="exit-feed" src="{{ url_for('camera.video_feed') }}?mode=exit" alt="Exit Feed" class="cam-feed" onerror="if(typeof setupClientCameraFallback === 'function') setupClientCameraFallback('exit-feed', 'exit')">
+      <img id="exit-feed" alt="Exit Feed" class="cam-feed" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
       <div class="scan-line" style="background:linear-gradient(90deg,transparent,var(--danger),transparent);box-shadow:0 0 20px 2px var(--danger)"></div>
       <div class="cam-corner tl" style="border-color:var(--danger)"></div>
       <div class="cam-corner tr" style="border-color:var(--danger)"></div>
@@ -297,6 +297,14 @@ updateVoiceUI();
 if ({{ 'true' if geofencing_enabled else 'false' }}) setTimeout(verifyLocation, 1000);
 setInterval(loadStats, 2000);
 if ({{ 'true' if geofencing_enabled else 'false' }}) setInterval(verifyLocation, 60000); // Check every minute
+
+// Force client-side camera on load
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof setupClientCameraFallback === 'function') {
+        setupClientCameraFallback('entry-feed', 'entry');
+        setupClientCameraFallback('exit-feed', 'exit');
+    }
+});
 
 // Polling for live liveness warnings via activity feed modifications could go here
 // but the liveness box is drawn directly on the camera MJPEG feed via OpenCV in face_engine.py
