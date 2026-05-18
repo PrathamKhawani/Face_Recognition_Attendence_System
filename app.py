@@ -26,6 +26,10 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH']             = config.MAX_CONTENT_LENGTH
     app.secret_key                               = 'faceid-enterprise-s3cr3t-2026'
     app.permanent_session_lifetime               = timedelta(hours=12)
+    
+    # Required for Hugging Face Spaces (iframe embedding cross-origin cookies)
+    app.config['SESSION_COOKIE_SAMESITE']        = 'None'
+    app.config['SESSION_COOKIE_SECURE']          = True
 
     db.init_app(app)
     limiter.init_app(app)
