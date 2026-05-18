@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard · FaceID Enterprise{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
+{% block page_title %}Live Dashboard{% endblock %}
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 {% endblock %}
 
 {% block content %}
-<!-- KPI Strip -->
+<!-- KPI Strip (Claymorphism) -->
 <div class="kpi-strip">
-  <div class="kpi-card">
+  <div class="card kpi-card">
     <div class="kpi-icon kpi-blue">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -22,7 +22,7 @@
       <div class="kpi-label">Total Enrolled</div>
     </div>
   </div>
-  <div class="kpi-card">
+  <div class="card kpi-card">
     <div class="kpi-icon kpi-green">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="20 6 9 17 4 12"/>
@@ -33,7 +33,7 @@
       <div class="kpi-label">Present Today</div>
     </div>
   </div>
-  <div class="kpi-card">
+  <div class="card kpi-card">
     <div class="kpi-icon kpi-red">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
@@ -44,7 +44,7 @@
       <div class="kpi-label">Absent Today</div>
     </div>
   </div>
-  <div class="kpi-card">
+  <div class="card kpi-card">
     <div class="kpi-icon kpi-purple">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
@@ -57,18 +57,18 @@
   </div>
 </div>
 
-<!-- Dual Gate Cameras -->
+<!-- Dual Gate Cameras (Military HUD style) -->
 <div class="dual-cam-row">
   <!-- Entry Gate -->
   <div class="card cam-card">
     <div class="card-hd">
-      <div class="card-hd-left">
+      <div style="display:flex; align-items:center;">
         <span class="gate-pill gate-entry">ENTRY</span>
-        <span class="card-title">Entry Gate · Check-In</span>
+        <span class="card-title">Check-In AI</span>
       </div>
-      <div class="cam-status">
-        {% if geofencing_enabled %}<button class="btn btn-xs btn-ghost" onclick="verifyLocation()" style="margin-right:8px">📍 Verify Loc</button>{% endif %}
-        <span class="status-dot pulse"></span><span>Live</span>
+      <div class="sb-status-row">
+        {% if geofencing_enabled %}<button class="btn btn-xs btn-ghost" onclick="verifyLocation()" style="margin-right:8px" title="Verify Location">📍</button>{% endif %}
+        <span class="status-dot pulse"></span><span style="font-size:.8rem; color:var(--t2); font-weight:600;">LIVE</span>
       </div>
     </div>
     <div class="cam-wrap">
@@ -76,12 +76,12 @@
       <div class="scan-line"></div>
       <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
       <div class="cam-corner bl"></div><div class="cam-corner br"></div>
-      <div class="cam-badge cam-badge-entry">CHECK-IN</div>
+      <div class="cam-badge cam-badge-entry">CHECK-IN ZONE</div>
     </div>
     <div class="cam-footer">
-      <span class="cam-footer-txt">Auto-detects · marks Present / Late</span>
-      <div>
-        <button class="btn btn-xs btn-ghost" onclick="toggleFullscreen(this.closest('.cam-card').querySelector('.cam-wrap'))">⛶ Fullscreen</button>
+      <span class="cam-footer-txt">Anti-Spoofing Enabled · Marks Present</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-xs btn-ghost" onclick="toggleFullscreen(this.closest('.cam-card').querySelector('.cam-wrap'))">⛶</button>
         <button class="btn btn-xs btn-ghost" onclick="reloadFaces()">↺ Reload</button>
       </div>
     </div>
@@ -90,54 +90,54 @@
   <!-- Exit Gate -->
   <div class="card cam-card">
     <div class="card-hd">
-      <div class="card-hd-left">
+      <div style="display:flex; align-items:center;">
         <span class="gate-pill gate-exit">EXIT</span>
-        <span class="card-title">Exit Gate · Check-Out</span>
+        <span class="card-title">Check-Out AI</span>
       </div>
-      <div class="cam-status">
-        <span class="status-dot pulse" style="background:var(--danger)"></span><span>Live</span>
+      <div class="sb-status-row">
+        <span class="status-dot pulse" style="background:var(--danger)"></span><span style="font-size:.8rem; color:var(--t2); font-weight:600;">LIVE</span>
       </div>
     </div>
     <div class="cam-wrap">
       <img id="exit-feed" src="{{ url_for('camera.video_feed') }}?mode=exit" alt="Exit Feed" class="cam-feed" onerror="if(typeof setupClientCameraFallback === 'function') setupClientCameraFallback('exit-feed', 'exit')">
-      <div class="scan-line" style="background:linear-gradient(90deg,transparent,var(--danger),transparent);box-shadow:0 0 10px var(--danger)"></div>
+      <div class="scan-line" style="background:linear-gradient(90deg,transparent,var(--danger),transparent);box-shadow:0 0 20px 2px var(--danger)"></div>
       <div class="cam-corner tl" style="border-color:var(--danger)"></div>
       <div class="cam-corner tr" style="border-color:var(--danger)"></div>
       <div class="cam-corner bl" style="border-color:var(--danger)"></div>
       <div class="cam-corner br" style="border-color:var(--danger)"></div>
-      <div class="cam-badge cam-badge-exit">CHECK-OUT</div>
+      <div class="cam-badge cam-badge-exit">CHECK-OUT ZONE</div>
     </div>
     <div class="cam-footer" style="justify-content:space-between">
       <span class="cam-footer-txt">Min. {{ min_checkout_h }}h check-in required</span>
-        <button class="btn btn-xs btn-ghost" onclick="toggleFullscreen(this.closest('.cam-card').querySelector('.cam-wrap'))">⛶ Fullscreen</button>
+      <button class="btn btn-xs btn-ghost" onclick="toggleFullscreen(this.closest('.cam-card').querySelector('.cam-wrap'))">⛶</button>
     </div>
   </div>
 </div>
 
-<!-- Activity Feed -->
-<div class="dash-mid">
-  <div class="card activity-card">
+<!-- Bento Grid Bottom Row -->
+<div class="form-grid">
+  <!-- Activity Feed -->
+  <div class="card">
     <div class="card-hd">
       <span class="card-title">Live Activity</span>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:12px;align-items:center;">
         <button id="voice-toggle-btn" class="btn btn-xs btn-ghost" onclick="toggleVoice()">Voice: OFF</button>
         <span class="badge" id="act-count">0 today</span>
       </div>
     </div>
     <div class="activity-list" id="activity-list">
-      <div class="activity-empty">Waiting for recognition events…</div>
+      <div style="color:var(--t2);font-size:.9rem;text-align:center;padding:40px 0;">Waiting for recognition events…</div>
     </div>
   </div>
-</div>
 
-<!-- Hourly Chart -->
-<div class="card chart-card">
-  <div class="card-hd">
-    <span class="card-title">Check-In Distribution · Today</span>
-    <span class="chart-sub" id="chart-sub">hourly</span>
-  </div>
-  <div class="chart-wrap">
-    <canvas id="hourly-chart"></canvas>
+  <!-- Hourly Chart -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">Check-In Trend (Today)</span>
+    </div>
+    <div class="chart-wrap" style="height:350px;">
+      <canvas id="hourly-chart"></canvas>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -160,6 +160,8 @@ async function verifyLocation() {
     });
     if (!ok) {
         showToast('Attendance blocked: Outside office area', 'error');
+    } else {
+        showToast('Location verified: Inside office boundary', 'success');
     }
 }
 
@@ -181,69 +183,88 @@ function updateVoiceUI() {
 }
 
 async function loadStats() {
-  const res  = await fetch('/api/stats');
-  const data = await res.json();
+  try {
+      const res  = await fetch('/api/stats');
+      const data = await res.json();
 
-  document.getElementById('k-total').textContent   = data.total_users;
-  document.getElementById('k-present').textContent = data.present_today;
-  document.getElementById('k-absent').textContent  = data.absent_today;
-  document.getElementById('k-rate').textContent    = data.attendance_rate + '%';
-  document.getElementById('sb-face-count').innerHTML =
-    `<span class="sb-status-label">${data.total_users} faces loaded</span>`;
+      document.getElementById('k-total').textContent   = data.total_users;
+      document.getElementById('k-present').textContent = data.present_today;
+      document.getElementById('k-absent').textContent  = data.absent_today;
+      document.getElementById('k-rate').textContent    = data.attendance_rate + '%';
+      document.getElementById('sb-face-count').innerHTML =
+        `<span class="sb-status-label">${data.total_users} faces loaded</span>`;
 
-  // Activity feed
-  const list = document.getElementById('activity-list');
-  document.getElementById('act-count').textContent = data.present_today + ' today';
-  if (data.recent.length === 0) {
-    list.innerHTML = '<div class="activity-empty">No check-ins yet today.</div>';
-  } else {
-    list.innerHTML = data.recent.map(r => `
-      <div class="act-row">
-        <div class="act-avatar">${r.name.charAt(0).toUpperCase()}</div>
-        <div class="act-info">
-          <div class="act-name">${r.name}</div>
-          <div class="act-dept">${r.department || 'No dept'}</div>
-        </div>
-        <div class="act-right">
-          <div class="act-time">${r.check_out || r.check_in}</div>
-          <span class="status-pill ${statusClass(r.status)}">${r.check_out ? 'Departed' : r.status}</span>
-        </div>
-      </div>`).join('');
-  }
-
-  // Voice Feedback Logic
-  let newEvents = [];
-  data.recent.forEach(r => {
-      if (r.check_in && (!lastSeenTime || r.check_in > lastSeenTime)) newEvents.push({type:'in', name: r.name, time: r.check_in});
-      if (r.check_out && (!lastSeenTime || r.check_out > lastSeenTime)) newEvents.push({type:'out', name: r.name, time: r.check_out});
-  });
-
-  if (lastSeenTime === null) {
-      // First load, don't speak history
-      lastSeenTime = newEvents.length ? newEvents.reduce((max, e) => e.time > max ? e.time : max, "") : "";
-      newEvents = [];
-  }
-
-  if (newEvents.length > 0) {
-      newEvents.sort((a,b) => a.time.localeCompare(b.time));
-      lastSeenTime = newEvents[newEvents.length - 1].time;
-      
-      if (voiceEnabled) {
-          newEvents.forEach(e => {
-              const greeting = e.type === 'in' ? `Welcome, ${e.name}` : `Goodbye, ${e.name}`;
-              speak(greeting);
-          });
+      // Activity feed
+      const list = document.getElementById('activity-list');
+      document.getElementById('act-count').textContent = data.present_today + ' today';
+      if (data.recent.length === 0) {
+        list.innerHTML = '<div style="color:var(--t2);font-size:.9rem;text-align:center;padding:40px 0;">No check-ins yet today.</div>';
+      } else {
+        list.innerHTML = data.recent.map(r => `
+          <div class="act-row">
+            <div class="act-avatar">${r.name.charAt(0).toUpperCase()}</div>
+            <div class="act-info">
+              <div class="act-name">${r.name}</div>
+              <div class="act-dept">${r.department || 'No dept'}</div>
+            </div>
+            <div class="act-right">
+              <div class="act-time">${r.check_out || r.check_in}</div>
+              <span class="status-pill ${statusClass(r.status)}">${r.check_out ? 'Departed' : r.status}</span>
+            </div>
+          </div>`).join('');
       }
-  }
 
-  // Hourly chart
-  if (!hourlyChart) {
-    hourlyChart = buildBarChart('hourly-chart',
-      Array.from({length:24}, (_,i)=>`${String(i).padStart(2,'0')}:00`),
-      data.hourly, 'Check-Ins');
-  } else {
-    hourlyChart.data.datasets[0].data = data.hourly;
-    hourlyChart.update('none');
+      // Voice Feedback Logic
+      let newEvents = [];
+      data.recent.forEach(r => {
+          if (r.check_in && (!lastSeenTime || r.check_in > lastSeenTime)) newEvents.push({type:'in', name: r.name, time: r.check_in});
+          if (r.check_out && (!lastSeenTime || r.check_out > lastSeenTime)) newEvents.push({type:'out', name: r.name, time: r.check_out});
+      });
+
+      if (lastSeenTime === null) {
+          lastSeenTime = newEvents.length ? newEvents.reduce((max, e) => e.time > max ? e.time : max, "") : "";
+          newEvents = [];
+      }
+
+      if (newEvents.length > 0) {
+          newEvents.sort((a,b) => a.time.localeCompare(b.time));
+          lastSeenTime = newEvents[newEvents.length - 1].time;
+          
+          if (voiceEnabled) {
+              newEvents.forEach(e => {
+                  const greeting = e.type === 'in' ? `Welcome, ${e.name}` : `Goodbye, ${e.name}`;
+                  speak(greeting);
+              });
+          }
+      }
+
+      // Hourly chart styling adjustment for dark/light mode
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      const textColor = isDark ? '#94a3b8' : '#475569';
+      const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+      if (!hourlyChart) {
+        hourlyChart = buildBarChart('hourly-chart',
+          Array.from({length:24}, (_,i)=>`${String(i).padStart(2,'0')}:00`),
+          data.hourly, 'Check-Ins');
+        // Custom styling applied to chart after build
+        if (hourlyChart && hourlyChart.options) {
+             hourlyChart.options.scales.x.ticks.color = textColor;
+             hourlyChart.options.scales.y.ticks.color = textColor;
+             hourlyChart.options.scales.x.grid.color = gridColor;
+             hourlyChart.options.scales.y.grid.color = gridColor;
+             hourlyChart.update();
+        }
+      } else {
+        hourlyChart.data.datasets[0].data = data.hourly;
+        hourlyChart.options.scales.x.ticks.color = textColor;
+        hourlyChart.options.scales.y.ticks.color = textColor;
+        hourlyChart.options.scales.x.grid.color = gridColor;
+        hourlyChart.options.scales.y.grid.color = gridColor;
+        hourlyChart.update('none');
+      }
+  } catch(e) {
+      console.log("Stats fetch error, likely reloading", e);
   }
 }
 
@@ -256,33 +277,28 @@ function statusClass(s) {
 async function reloadFaces() {
   const r = await fetch('/reload_faces', {method:'POST', headers: {'X-CSRFToken': getCsrfToken()}});
   const d = await r.json();
-  showToast(`${d.faces_loaded} face(s) reloaded`, 'success');
+  showToast(`${d.faces_loaded} face(s) reloaded with Liveness models`, 'success');
 }
 
 function toggleFullscreen(elem) {
   if (!document.fullscreenElement) {
     if (elem.requestFullscreen) {
       elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-      elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-      elem.msRequestFullscreen();
     }
   } else {
     if (document.exitFullscreen) {
       document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-      document.msExitFullscreen();
     }
   }
 }
 
 loadStats();
 updateVoiceUI();
-verifyLocation();
-setInterval(loadStats, 1500);
+if ({{ 'true' if geofencing_enabled else 'false' }}) setTimeout(verifyLocation, 1000);
+setInterval(loadStats, 2000);
 if ({{ 'true' if geofencing_enabled else 'false' }}) setInterval(verifyLocation, 60000); // Check every minute
+
+// Polling for live liveness warnings via activity feed modifications could go here
+// but the liveness box is drawn directly on the camera MJPEG feed via OpenCV in face_engine.py
 </script>
 {% endblock %}

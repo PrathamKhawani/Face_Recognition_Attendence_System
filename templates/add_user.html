@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}Add Employee · FaceID Enterprise{% endblock %}
-{% block page_title %}Add Employee{% endblock %}
+{% block page_title %}Enroll New Employee{% endblock %}
 
 {% block content %}
-<div class="add-user-wrap">
-  <form id="add-form" enctype="multipart/form-data">
+<div class="add-user-wrap" style="max-width: 1200px; margin: 0 auto; width: 100%;">
+  <form id="add-form" enctype="multipart/form-data" style="display: grid; grid-template-columns: 1fr 2fr; gap: 32px;">
     <!-- Left: Photo upload -->
-    <div class="card photo-card">
-      <div class="card-hd">
-        <span class="card-title">Face Photo</span>
-        <div class="tab-group" style="padding:2px">
+    <div class="card photo-card" style="align-self: start; padding: 32px;">
+      <div class="card-hd" style="margin-bottom: 32px;">
+        <span class="card-title">Face Identity</span>
+        <div class="tab-group" style="padding:4px">
           <button type="button" id="tab-upload" class="tab-btn active" onclick="setPhotoMode('upload')">Upload</button>
           <button type="button" id="tab-webcam" class="tab-btn" onclick="setPhotoMode('webcam')">Webcam</button>
         </div>
@@ -19,39 +19,41 @@
       <div id="mode-upload">
         <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-input').click()">
           <div class="photo-preview" id="photo-preview">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            <p>Click or drag to upload photo</p>
-            <span>JPG, PNG up to 16 MB</span>
+            <p style="font-weight:700; color:var(--t1);">Click or drop photo here</p>
+            <span style="font-size:.8rem; color:var(--t2);">High-res JPG/PNG up to 16MB</span>
           </div>
-          <img id="preview-img" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:12px">
+          <img id="preview-img" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:16px;">
         </div>
         <input type="file" id="photo-input" name="photo" accept="image/*" style="display:none" onchange="previewPhoto(this)">
       </div>
 
       <!-- Webcam Mode -->
       <div id="mode-webcam" style="display:none">
-        <div class="photo-drop" style="position:relative; border-style:solid; padding:0; background:#000">
-          <video id="webcam-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; border-radius:8px;"></video>
-          <canvas id="webcam-canvas" width="640" height="480" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:8px;"></canvas>
-          <button type="button" id="snap-btn" class="btn btn-primary" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%)" onclick="snapPhoto()">📷 Snap Photo</button>
-          <button type="button" id="retake-btn" class="btn btn-ghost" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:none; background:rgba(0,0,0,0.6)" onclick="retakePhoto()">↺ Retake</button>
+        <div class="photo-drop" style="position:relative; border-style:solid; padding:0; background:#000; overflow:hidden;">
+          <video id="webcam-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; border-radius:16px;"></video>
+          <canvas id="webcam-canvas" width="640" height="480" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:16px;"></canvas>
+          <button type="button" id="snap-btn" class="btn btn-primary" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); padding: 10px 20px; font-size: .85rem;" onclick="snapPhoto()">📷 Capture</button>
+          <button type="button" id="retake-btn" class="btn btn-ghost" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:none; background:rgba(0,0,0,0.6); color:#fff;" onclick="retakePhoto()">↺ Retake</button>
         </div>
         <input type="hidden" id="webcam-data" name="webcam_data">
       </div>
 
-      <p class="photo-hint">Use a clear, front-facing photo with good lighting. This will be used for all future face recognition.</p>
+      <div style="margin-top:24px; padding: 16px; background: rgba(99, 102, 241, 0.05); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+        <p style="font-size:.8rem; color:var(--t2); line-height: 1.5;"><strong style="color:var(--primary);">AI Requirements:</strong> Face must be well-lit, front-facing, and clear. Avoid heavy shadows or wearing sunglasses.</p>
+      </div>
     </div>
 
     <!-- Right: Profile fields -->
-    <div class="form-section">
+    <div class="form-section" style="display:flex; flex-direction:column; gap:32px;">
       <div class="card form-card">
-        <div class="card-hd"><span class="card-title">Personal Information</span></div>
+        <div class="card-hd"><span class="card-title">Employee Details</span></div>
         <div class="form-grid">
           <div class="form-group form-full">
-            <label>Full Name <span class="req">*</span></label>
+            <label>Full Legal Name <span class="req">*</span></label>
             <input type="text" name="name" class="inp-text" placeholder="e.g. Pratham Sharma" required>
           </div>
           <div class="form-group">
@@ -64,7 +66,7 @@
           </div>
           <div class="form-group">
             <label>Role / Position</label>
-            <input type="text" name="role" class="inp-text" placeholder="e.g. Senior Developer">
+            <input type="text" name="role" class="inp-text" placeholder="e.g. Senior AI Engineer">
           </div>
           <div class="form-group">
             <label>Email Address</label>
@@ -74,37 +76,36 @@
             <label>Phone Number</label>
             <input type="tel" name="phone" class="inp-text" placeholder="+91 98765 43210">
           </div>
-          <div class="form-group">
+          <div class="form-group form-full">
             <label>Date of Joining</label>
             <input type="date" name="join_date" class="inp-date" id="join-date">
           </div>
         </div>
       </div>
 
-      <div class="card form-card" style="margin-top:1rem">
-        <div class="card-hd"><span class="card-title">Shift Schedule</span></div>
+      <div class="card form-card">
+        <div class="card-hd"><span class="card-title">Shift Schedule Parameters</span></div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Shift Start</label>
+            <label>Standard Shift Start</label>
             <input type="time" name="shift_start" class="inp-date" value="09:00">
           </div>
           <div class="form-group">
-            <label>Shift End</label>
+            <label>Standard Shift End</label>
             <input type="time" name="shift_end" class="inp-date" value="18:00">
           </div>
         </div>
-        <p class="photo-hint" style="margin-top:.5rem">Shift times are used to determine Late / Early Departure status automatically.</p>
       </div>
 
-      <div class="form-actions">
+      <div class="form-actions" style="display:flex; justify-content:flex-end; gap:16px;">
         <a href="{{ url_for('users.users') }}" class="btn btn-ghost">Cancel</a>
         <button type="submit" class="btn btn-primary" id="submit-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
             <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
           </svg>
-          Enroll Employee
+          Complete Enrollment
         </button>
       </div>
     </div>
@@ -128,7 +129,6 @@ function previewPhoto(input) {
   reader.readAsDataURL(file);
 }
 
-// Drag-and-drop
 const drop = document.getElementById('photo-drop');
 drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
 drop.addEventListener('dragleave', ()=> drop.classList.remove('drag-over'));
@@ -175,7 +175,6 @@ function snapPhoto() {
   document.getElementById('snap-btn').style.display = 'none';
   document.getElementById('retake-btn').style.display = 'inline-flex';
   
-  // Stop stream to freeze frame
   if (stream) stream.getTracks().forEach(t => t.stop());
 }
 
@@ -200,15 +199,15 @@ document.getElementById('add-form').addEventListener('submit', async e => {
     const res  = await fetch('/users/add', {method:'POST', body: fd, headers: {'X-CSRFToken': getCsrfToken()}});
     const data = await res.json();
     if (res.ok) {
-      showToast(`Employee enrolled — ID: ${data.employee_id}`, 'success');
+      showToast(`Employee enrolled successfully — ID: ${data.employee_id}`, 'success');
       setTimeout(()=> window.location.href = '/users', 1500);
     } else {
       showToast(data.error || 'Failed to enroll', 'error');
-      btn.disabled = false; btn.textContent = 'Enroll Employee';
+      btn.disabled = false; btn.textContent = 'Complete Enrollment';
     }
   } catch(err) {
     showToast('Network error', 'error');
-    btn.disabled = false; btn.textContent = 'Enroll Employee';
+    btn.disabled = false; btn.textContent = 'Complete Enrollment';
   }
 });
 </script>

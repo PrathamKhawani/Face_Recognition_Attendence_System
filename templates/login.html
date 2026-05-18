@@ -5,59 +5,102 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign In · FaceID Enterprise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0f14;--surface:#111318;--border:rgba(255,255,255,0.08);
-      --primary:#4f46e5;--accent:#10b981;--t1:#f1f5f9;--t2:#64748b;--danger:#ef4444}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{font-size:13px;-webkit-font-smoothing:antialiased}
-body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;
-     min-height:100vh;display:flex;align-items:center;justify-content:center;
-     position:relative;overflow:hidden}
+:root {
+  --bg-base:      #0b0d17;
+  --bg-aurora-1:  #4f46e5;
+  --bg-aurora-2:  #06b6d4;
+  --bg-aurora-3:  #a855f7;
+  
+  --glass-bg:     rgba(20, 22, 35, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  
+  --neu-bg:       #151722;
+  --neu-shadow:   5px 5px 10px #0b0c12, -5px -5px 10px #1f2232;
+  --neu-inset:    inset 3px 3px 6px #0b0c12, inset -3px -3px 6px #1f2232;
 
-/* Blobs */
-.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.12;pointer-events:none}
-.b1{width:500px;height:500px;background:var(--primary);top:-150px;right:-100px}
-.b2{width:400px;height:400px;background:var(--accent);bottom:-100px;left:-100px}
+  --t1:           #f8fafc;
+  --t2:           #94a3b8;
+  --primary:      #6366f1;
+  --primary-glow: rgba(99, 102, 241, 0.5);
+  --accent:       #22d3ee;
+  --danger:       #f43f5e;
+}
 
-.login-card{background:var(--surface);border:1px solid var(--border);
-            border-radius:14px;padding:36px 32px;width:100%;max-width:380px;
-            position:relative;z-index:1}
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:14px; -webkit-font-smoothing:antialiased; }
+body {
+  background: var(--bg-base); color: var(--t1); font-family: 'Inter', sans-serif;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
 
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
-.login-logo-icon{width:32px;height:32px;color:var(--primary)}
-.login-logo-icon svg{width:100%;height:100%}
-.login-brand{display:flex;flex-direction:column}
-.login-brand-name{font-size:1rem;font-weight:700;letter-spacing:-.3px}
-.login-brand-sub{font-size:.68rem;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+/* Aurora Mesh Background */
+body::before, body::after {
+  content: ''; position: fixed; width: 80vw; height: 80vw; border-radius: 50%;
+  filter: blur(150px); z-index: -1; opacity: 0.2; animation: auroraFlow 20s infinite alternate;
+}
+body::before { top: -20vw; left: -20vw; background: radial-gradient(circle, var(--bg-aurora-1), transparent 70%); }
+body::after { bottom: -20vw; right: -20vw; background: radial-gradient(circle, var(--bg-aurora-2), var(--bg-aurora-3), transparent 70%); animation-delay: -5s; }
 
-h2{font-size:.95rem;font-weight:600;margin-bottom:4px}
-.login-sub{font-size:.78rem;color:var(--t2);margin-bottom:24px}
+@keyframes auroraFlow {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+  50% { transform: translate(10%, 15%) scale(1.1); opacity: 0.25; }
+  100% { transform: translate(-10%, -5%) scale(0.9); opacity: 0.2; }
+}
 
-.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-label{font-size:.75rem;font-weight:500;color:var(--t2)}
-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;
-      color:var(--t1);padding:8px 12px;font-size:.82rem;font-family:inherit;outline:none;
-      transition:border-color .15s}
-input:focus{border-color:var(--primary)}
+.login-card {
+  background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 24px; padding: 48px 40px;
+  width: 100%; max-width: 420px; position: relative; z-index: 1;
+  box-shadow: var(--glass-shadow), inset 0 0 20px rgba(255,255,255,0.02);
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(30px);
+}
+@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
-.error-box{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);
-           border-radius:7px;padding:8px 12px;font-size:.75rem;color:var(--danger);
-           margin-bottom:14px}
+.login-logo { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; justify-content: center; }
+.login-logo-icon { width: 42px; height: 42px; color: var(--primary); filter: drop-shadow(0 0 10px var(--primary-glow)); }
+.login-logo-icon svg { width: 100%; height: 100%; }
+.login-brand { display: flex; flex-direction: column; }
+.login-brand-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; font-family: 'Outfit', sans-serif; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.login-brand-sub { font-size: .75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
 
-.btn-login{width:100%;background:var(--primary);color:#fff;border:none;border-radius:7px;
-           padding:9px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;
-           transition:background .15s;margin-top:4px}
-.btn-login:hover{background:#3730a3}
+h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; font-family: 'Outfit', sans-serif; text-align: center; }
+.login-sub { font-size: .9rem; color: var(--t2); margin-bottom: 32px; text-align: center; }
 
-.login-footer{margin-top:20px;font-size:.72rem;color:var(--t2);text-align:center}
-.login-footer code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;
-                   font-family:monospace;font-size:.72rem}
+.form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+label { font-size: .8rem; font-weight: 600; color: var(--t2); text-transform: uppercase; letter-spacing: 1px; }
+input {
+  background: var(--neu-bg); box-shadow: var(--neu-inset);
+  border: 1px solid transparent; border-radius: 12px;
+  color: var(--t1); padding: 14px 16px; font-size: .95rem; font-family: inherit; outline: none;
+  transition: all .3s; font-weight: 500;
+}
+input:focus { border-color: var(--primary); box-shadow: var(--neu-inset), 0 0 0 3px var(--primary-glow); }
+
+.error-box {
+  background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.3);
+  border-radius: 12px; padding: 12px 16px; font-size: .85rem; color: var(--danger);
+  margin-bottom: 24px; text-align: center; font-weight: 600; text-shadow: 0 0 8px rgba(244,63,94,0.5);
+}
+
+.btn-login {
+  width: 100%; background: linear-gradient(135deg, var(--primary), #818cf8); color: #fff;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+  padding: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif;
+  transition: all .3s; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;
+  box-shadow: 0 4px 15px var(--primary-glow), inset 0 2px 4px rgba(255,255,255,0.3);
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--primary-glow), inset 0 2px 4px rgba(255,255,255,0.3); }
+.btn-login:active { transform: translateY(1px); box-shadow: 0 2px 10px var(--primary-glow); }
+
+.login-footer { margin-top: 28px; font-size: .8rem; color: var(--t2); text-align: center; line-height: 1.6; }
+.login-footer code { background: rgba(255,255,255,.05); padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: .8rem; color: var(--t1); border: 1px solid var(--glass-border); }
 </style>
 </head>
 <body>
-<div class="blob b1"></div>
-<div class="blob b2"></div>
 
 <div class="login-card">
   <div class="login-logo">
@@ -65,7 +108,7 @@ input:focus{border-color:var(--primary)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="8" r="4"/>
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-        <circle cx="19" cy="8" r="2" fill="#10b981" stroke="none"/>
+        <circle cx="19" cy="8" r="2" fill="#22d3ee" stroke="none"/>
       </svg>
     </div>
     <div class="login-brand">
@@ -97,7 +140,7 @@ input:focus{border-color:var(--primary)}
   </form>
 
   <div class="login-footer">
-    Default credentials: <code>admin</code> / <code>FaceID@2026</code><br>
+    Default: <code>admin</code> / <code>FaceID@2026</code><br>
     Change in <code>config.py</code>
   </div>
 </div>

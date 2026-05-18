@@ -8,7 +8,7 @@
 
 {% block content %}
 <!-- Controls bar -->
-<div class="ctrl-bar">
+<div class="ctrl-bar card" style="padding: 16px 24px; margin-bottom: 24px;">
   <div class="tab-group">
     <button class="tab-btn active" data-view="daily"   onclick="setView('daily',this)">Daily</button>
     <button class="tab-btn"        data-view="monthly" onclick="setView('monthly',this)">Monthly</button>
@@ -21,7 +21,7 @@
     </select>
     <input type="text" id="search-input" class="inp-text" placeholder="Search name…" oninput="debounceLoad()">
     <button class="btn btn-ghost" onclick="exportExcel()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
         <polyline points="14 2 14 8 20 8"/>
         <line x1="8" y1="13" x2="16" y2="13"/>
@@ -34,34 +34,34 @@
 </div>
 
 <!-- Chart -->
-<div class="card chart-card" style="margin-bottom:1rem">
+<div class="card" style="margin-bottom:24px;">
   <div class="card-hd">
-    <span class="card-title" id="chart-label">Attendance · Today</span>
+    <span class="card-title" id="chart-label">Attendance Trend</span>
     <span class="badge" id="rec-count">0 records</span>
   </div>
-  <div class="chart-wrap" style="height:200px">
+  <div class="chart-wrap" style="height:250px">
     <canvas id="att-chart"></canvas>
   </div>
 </div>
 
 <!-- Table -->
-<div class="card">
-  <div class="table-scroll">
+<div class="card" style="padding:0; overflow:hidden;">
+  <div class="table-scroll" style="margin:0; padding:0;">
     <table class="data-table">
       <thead>
         <tr>
-          <th>Employee</th>
+          <th style="padding-left: 32px;">Employee</th>
           <th>ID</th>
           <th>Department</th>
           <th>Date</th>
           <th>Check-In</th>
           <th>Check-Out</th>
           <th>Hours</th>
-          <th>Status</th>
+          <th style="padding-right: 32px;">Status</th>
         </tr>
       </thead>
       <tbody id="att-body">
-        <tr><td colspan="8" class="tbl-empty">Loading…</td></tr>
+        <tr><td colspan="8" style="text-align:center; padding: 40px; color:var(--t2);">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -75,7 +75,6 @@ let currentView = 'daily';
 let attChart    = null;
 let debTimer    = null;
 
-// Set today as default
 document.getElementById('date-picker').value = new Date().toISOString().split('T')[0];
 
 function setView(v, el) {
@@ -99,7 +98,6 @@ async function loadData() {
   const res  = await fetch(url);
   const data = await res.json();
 
-  // Populate dept filter
   const sel = document.getElementById('dept-filter');
   const cur = sel.value;
   sel.innerHTML = '<option value="">All Departments</option>' +
@@ -107,12 +105,13 @@ async function loadData() {
 
   document.getElementById('rec-count').textContent = data.records.length + ' records';
 
-  // Chart label
   const labels = {'daily':'Today','monthly':'This Month','yearly':'This Year'};
-  document.getElementById('chart-label').textContent =
-    `Attendance · ${labels[currentView]}`;
+  document.getElementById('chart-label').textContent = `Attendance · ${labels[currentView]}`;
 
-  // Chart — bar for daily, line for monthly/yearly
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textColor = isDark ? '#94a3b8' : '#475569';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
   if (attChart) { attChart.destroy(); attChart = null; }
   if (currentView === 'daily') {
     attChart = buildBarChart('att-chart', data.chart.labels, data.chart.present, 'Check-Ins');
@@ -120,25 +119,32 @@ async function loadData() {
     attChart = buildLineChart('att-chart', data.chart.labels, data.chart.present, 'Attendance');
   }
 
-  // Table
+  if (attChart && attChart.options) {
+       attChart.options.scales.x.ticks.color = textColor;
+       attChart.options.scales.y.ticks.color = textColor;
+       attChart.options.scales.x.grid.color = gridColor;
+       attChart.options.scales.y.grid.color = gridColor;
+       attChart.update();
+  }
+
   const tbody = document.getElementById('att-body');
   if (!data.records.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="tbl-empty">No records found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px; color:var(--t2);">No records found.</td></tr>';
     return;
   }
   tbody.innerHTML = data.records.map(r => `
     <tr class="row-in">
-      <td><div class="name-cell">
+      <td style="padding-left: 32px;"><div class="name-cell">
         <div class="avatar-sm">${r.name.charAt(0)}</div>
-        <span>${r.name}</span>
+        <span style="font-weight:700;">${r.name}</span>
       </div></td>
       <td class="mono">${r.employee_id}</td>
-      <td>${r.department || '—'}</td>
+      <td style="font-weight:600;">${r.department || '—'}</td>
       <td class="mono">${r.date}</td>
       <td class="mono">${r.check_in || '—'}</td>
       <td class="mono">${r.check_out || '—'}</td>
       <td class="mono">${r.hours_worked != null ? r.hours_worked + 'h' : '—'}</td>
-      <td><span class="status-pill ${pillClass(r.status)}">${r.status}</span></td>
+      <td style="padding-right: 32px;"><span class="status-pill ${pillClass(r.status)}">${r.status}</span></td>
     </tr>`).join('');
 }
 
